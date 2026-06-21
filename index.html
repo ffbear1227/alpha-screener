@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Stock Screener</title>
+    <title>Alpha Screen</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://img.icons8.com/ios-filled/100/40C057/bullish.png">
@@ -12,12 +12,12 @@
 </head>
 <body class="bg-neutral-950 text-slate-100 font-sans select-none pb-12">
 
-    <header class="pt-12 pb-4 px-6 border-b border-neutral-800 flex justify-between items-center sticky top-0 bg-neutral-950/80 backdrop-blur-md">
+    <header class="pt-12 pb-4 px-6 border-b border-neutral-800 flex justify-between items-center sticky top-0 bg-neutral-950/80 backdrop-blur-md z-50">
         <div>
             <h1 class="text-xl font-black tracking-wider text-emerald-400">ALPHA <span class="text-white font-light">SCREEN</span></h1>
             <p id="update-time" class="text-xs text-neutral-500 mt-0.5">最後更新: 讀取中...</p>
         </div>
-        <button onclick="fetchData()" class="bg-neutral-900 border border-neutral-700 px-3 py-1.5 rounded-full text-xs font-semibold active:scale-95 transition">
+        <button id="refresh-btn" onclick="fetchData()" class="bg-neutral-900 border border-neutral-700 px-3 py-1.5 rounded-full text-xs font-semibold active:scale-95 transition-all duration-200">
             重新整理
         </button>
     </header>
@@ -32,49 +32,97 @@
     </main>
 
     <script>
-        // ★★★ 部署後，把這裡換成你 GitHub Pages 的 results.json 網址 ★★★
-        const JSON_URL = './results.json';
+        // ★★★ 務必將下方的 ffbear1227 換成你真實的 GitHub 帳號名稱 ★★★
+        const JSON_URL = 'https://ffbear1227.github.io/alpha-screener/results.json';
 
         async function fetchData() {
+            const btn = document.getElementById('refresh-btn');
             const list = document.getElementById('stock-list');
+            const timeLabel = document.getElementById('update-time');
+
+            // 1. 給予用戶「正在按」的視覺回饋
+            btn.innerText = "載入中...";
+            btn.classList.add("scale-95", "opacity-50");
+            btn.disabled = true;
+
             try {
-                const res = await fetch(JSON_URL + '?t=' + new Date().getTime());
+                // 2. 終極快取破除術：時間戳記 + 隨機亂數雙重夾擊，強迫網頁繞過快取
+                const cacheBuster = Date.now() + '_' + Math.random().toString(36).substring(2);
+
+                const res = await fetch(`${JSON_URL}?v=${cacheBuster}`, {
+                    method: 'GET',
+                    cache: 'no-store',         // 叫瀏覽器絕對不准存入 Disk Cache
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+
+                if (!res.ok) throw new Error('Network response was not ok');
                 const data = await res.json();
 
-                document.getElementById('update-time').innerText = `最後更新: ${data.update_time}`;
+                timeLabel.innerText = `最後更新: ${data.update_time}`;
                 list.innerHTML = '';
 
-                if(data.count === 0) {
-                    list.innerHTML = `<div class="text-center py-16 text-neutral-600 font-medium">本次時段無符合突破條件之標的</div>`;
+                // 顯示遭門神封鎖的板塊橫幅提示
+                if (data.blocked_count > 0) {
+                    list.innerHTML += `
+                        <div class="px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-1 shadow-inner">
+                            <span class="font-bold flex items-center">🛡️ 門神封鎖中板塊：</span>
+                            <span class="font-mono text-[11px] opacity-90">${data.blocked_sectors.join(', ')}</span>
+                        </div>
+                    `;
+                }
+
+                // 如果沒有個股符合條件
+                if (data.count === 0) {
+                    list.innerHTML += `
+                        <div class="text-center py-24 text-neutral-600 font-medium tracking-wide">
+                            本次時段無個股突破門神封鎖
+                        </div>
+                    `;
                     return;
                 }
 
+                // 渲染符合篩選條件的個股卡片
                 data.data.forEach(item => {
                     list.innerHTML += `
-                        <div class="p-5 rounded-2xl bg-gradient-to-br from-neutral-900 to-neutral-900/40 border border-neutral-800/80 flex items-center justify-between shadow-lg">
+                        <div class="p-5 rounded-2xl bg-gradient-to-br from-neutral-900 to-neutral-900/40 border border-neutral-800/80 flex items-center justify-between shadow-lg active:scale-[0.99] transition-transform">
                             <div class="flex items-center space-x-4">
                                 <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col items-center justify-center">
-                                    <span class="text-xs font-bold text-emerald-400">${item.sector}</span>
+                                    <span class="text-[9px] text-neutral-400 font-light">門神</span>
+                                    <span class="text-xs font-bold text-emerald-400">${item.proxy}</span>
                                 </div>
                                 <div>
                                     <h2 class="text-xl font-black tracking-tight">${item.symbol}</h2>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400/10 text-amber-400 border border-amber-400/20">
-                                        RVOL ${item.rvol}x
-                                    </span>
+                                    <span class="text-xs text-neutral-400 font-medium">${item.sector}</span>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <div class="text-lg font-mono font-bold">$${item.price}</div>
-                                <div class="text-[10px] text-emerald-400 font-medium mt-1">▲ 52W High</div>
+                                <div class="text-lg font-mono font-bold text-slate-50">$${item.price}</div>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-400/10 text-amber-400 border border-amber-400/20 mt-1">
+                                    RVOL ${item.rvol}x
+                                </span>
                             </div>
                         </div>
                     `;
                 });
+
             } catch(e) {
-                list.innerHTML = `<div class="text-red-400 text-center py-8">讀取資料失敗</div>`;
+                timeLabel.innerText = "連線失敗，請稍後再試";
+                list.innerHTML = `<div class="text-red-400 text-center py-8 text-sm">無法讀取最新的篩選數據</div>`;
+            } finally {
+                // 3. 恢復按鈕狀態
+                setTimeout(() => {
+                    btn.innerText = "重新整理";
+                    btn.classList.remove("scale-95", "opacity-50");
+                    btn.disabled = false;
+                }, 500);
             }
         }
 
+        // 頁面開啟時自動執行第一次載入
         fetchData();
     </script>
 </body>
