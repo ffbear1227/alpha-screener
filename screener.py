@@ -5,9 +5,7 @@ import pandas as pd
 import requests
 import yfinance as yf
 
-# ==========================================
-# 終極量化版：美股 14 大板塊「雙引擎與廣度政變軍火庫」
-# ==========================================
+# 14大軍火庫
 THEMES = {
     "半導體與設備": {
         "parent": "SMH",
@@ -39,7 +37,15 @@ THEMES = {
     },
     "網路安全 (Sec)": {
         "parent": "CIBR",
-        "children": ["CRWD", "PANW", "FTNT", "ZS", "CYBR", "OKTA", "SNTL"],
+        "children": [
+            "CRWD",
+            "PANW",
+            "FTNT",
+            "ZS",
+            "OKTA",
+            "S",     # 修正：SentinelOne 的真實單字代號
+            "TENB"   # 替換：用極度穩定的 Tenable 換掉會抽風的 CYBR
+        ]
     },
     "AI電網與散熱基建": {
         "parent": "PAVE",
@@ -105,48 +111,62 @@ def calculate_indicators(ticker):
         stock = yf.Ticker(ticker)
         df = stock.history(period="1y")
 
-        if len(df) < 60:
+        if df.empty or len(df) < 60:
             return None
 
-        # 計算 EMA
         df["EMA5"] = df["Close"].ewm(span=5, adjust=False).mean()
         df["EMA10"] = df["Close"].ewm(span=10, adjust=False).mean()
         df["EMA20"] = df["Close"].ewm(span=20, adjust=False).mean()
         df["EMA50"] = df["Close"].ewm(span=50, adjust=False).mean()
 
-        # 計算 RVOL
-        df["VOL_20MA"] = df["Volume"].rolling(window=20).mean()
+        df["VOL_20MA"] = df["Volume"].rolling(window=20, min_periods=10).mean()
         df["RVOL"] = df["Volume"] / df["VOL_20MA"]
 
-        # 計算 52周最高 與 20日最高 (解決滯後性關鍵)
         df["52W_High"] = df["High"].rolling(window=252, min_periods=100).max()
         df["20D_High"] = df["High"].rolling(window=20, min_periods=10).max()
 
         current = df.iloc[-1]
-        info = stock.info
+        info = stock.info or {}
+
+        # ★ 終極安全防撞裝甲：強制數值轉型，若抓不到數值一律給 0，絕不允許 NoneType 崩潰
+        raw_mcap = info.get("marketCap")
+        market_cap = 0
+        if raw_mcap is not None:
+            try:
+                market_cap = int(float(raw_mcap))
+            except (ValueError, TypeError):
+                market_cap = 0
+
+        next_earnings = None
+        raw_earn = info.get("earningsTimestamp")
+        if raw_earn is not None:
+            try:
+                next_earnings = float(raw_earn)
+            except (ValueError, TypeError):
+                next_earnings = None
 
         return {
-            "close": current["Close"],
-            "high": current["High"],
-            "ema5": current["EMA5"],
-            "ema10": current["EMA10"],
-            "ema20": current["EMA20"],
-            "ema50": current["EMA50"],
-            "rvol": current["RVOL"],
-            "high_52w": current["52W_High"],
-            "high_20d": current["20D_High"],
-            "market_cap": info.get("marketCap", 0),
-            "next_earnings": info.get("earningsTimestamp", None),
+            "close": float(current["Close"]),
+            "high": float(current["High"]),
+            "ema5": float(current["EMA5"]),
+            "ema10": float(current["EMA10"]),
+            "ema20": float(current["EMA20"]),
+            "ema50": float(current["EMA50"]),
+            "rvol": float(current["RVOL"]),
+            "high_52w": float(current["52W_High"]),
+            "high_20d": float(current["20D_High"]),
+            "market_cap": market_cap,
+            "next_earnings": next_earnings,
         }
-    except Exception:
+    except Exception as e:
+        print(f"⚠️ 標的 {ticker} 數據獲取異常略過: {e}")
         return None
 
 
 def run_screener():
-    # 【第 0 層大盤總閘門】
     spy = calculate_indicators("SPY")
     if not spy or spy["close"] <= spy["ema20"]:
-        print("大盤 SPY 跌破 20EMA，系統總閘門關閉。")
+        print("🛑 大盤 SPY 跌破 20EMA，系統總閘門關閉。")
         return [], []
 
     passed_stocks = []
@@ -156,11 +176,9 @@ def run_screener():
         parent_sym = data["parent"]
         children = data["children"]
 
-        # 1. 取得門神狀態
         p_data = calculate_indicators(parent_sym)
         proxy_is_up = p_data and (p_data["close"] > p_data["ema20"])
 
-        # 2. 預先抓取所有子弟兵的數據（用來算廣度，同時避免稍後重複 Call API）
         children_dict = {}
         healthy_count = 0
 
@@ -176,10 +194,8 @@ def run_screener():
         if total_valid == 0:
             continue
 
-        # 3. 計算板塊內部廣度 (站上20EMA的比例)
         breadth_ratio = healthy_count / total_valid
 
-        # ★ 廣度政變判定：門神雖倒，但若板塊內 >= 50% 存活，強制開門！
         gate_status = "BLOCKED"
         gate_desc = ""
 
@@ -194,7 +210,6 @@ def run_screener():
             blocked_sectors.append(f"{theme_name}({parent_sym})")
             continue
 
-        # 4. 掃描房間內的個股
         for sym, s in children_dict.items():
             if s["market_cap"] < 100_000_000:
                 continue
@@ -209,11 +224,6 @@ def run_screener():
                 if 0 <= days_to_earnings <= 3:
                     continue
 
-            # ==========================================
-            # ★ 雙引擎動能突破判定 (滿足 A 或 B 皆可)
-            # ==========================================
-
-            # 【引擎 A】：經典 52 周強勢領頭羊
             engine_a = (
                 (s["ema5"] > s["ema10"] > s["ema20"] > s["ema50"])
                 and (s["close"] > s["ema5"])
@@ -221,19 +231,17 @@ def run_screener():
                 and (s["rvol"] > 1.5)
             )
 
-            # 【引擎 B】：口袋支點 / 底部起漲引擎 (克服滯後性)
             engine_b = (
                 (s["close"] > s["ema20"])
                 and (s["close"] > s["ema50"])
                 and (s["ema5"] > s["ema10"] > s["ema20"])
                 and (s["close"] > s["ema5"])
                 and (s["high"] >= s["high_20d"] * 0.995)
-                and (s["rvol"] > 2.0)  # 底部發動，爆量要求更嚴格
+                and (s["rvol"] > 2.0)
             )
 
             if engine_a or engine_b:
                 signal_type = "🚀 52W創高" if engine_a else "⚡ 底部發動"
-
                 passed_stocks.append(
                     {
                         "symbol": sym,
