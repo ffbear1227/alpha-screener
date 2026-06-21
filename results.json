@@ -1,13 +1,1 @@
-{
-  "update_time": "2026-06-21 19:40:55",
-  "count": 1,
-  "data": [
-    {
-      "symbol": "ARM",
-      "sector": "AI半導體",
-      "price": 439.46,
-      "rvol": 2.42,
-      "time": "2026-06-21 19:40"
-    }
-  ]
-}
+{"update_time": "2026-06-21 22:52:59", "count": 7, "blocked_count": 4, "blocked_sectors": ["雲端與大數據(IGV)", "高動能電動車(IDRV)", "貴金屬與礦業(GLD)", "中概網路龍頭(KWEB)"], "data": [{"symbol": "TSM", "sector": "半導體與設備", "proxy": "SMH", "price": 462.12, "rvol": 2.0, "signal": "🚀 52W創高", "gate": "ETF門神"}, {"symbol": "ARM", "sector": "半導體與設備", "proxy": "SMH", "price": 439.46, "rvol": 2.42, "signal": "🚀 52W創高", "gate": "ETF門神"}, {"symbol": "AMAT", "sector": "半導體與設備", "proxy": "SMH", "price": 617.11, "rvol": 1.8, "signal": "🚀 52W創高", "gate": "ETF門神"}, {"symbol": "GE", "sector": "AI電網與散熱基建", "proxy": "PAVE", "price": 357.64, "rvol": 1.58, "signal": "🚀 52W創高", "gate": "ETF門神"}, {"symbol": "NVT", "sector": "AI電網與散熱基建", "proxy": "PAVE", "price": 177.02, "rvol": 2.23, "signal": "🚀 52W創高", "gate": "ETF門神"}, {"symbol": "CIFR", "sector": "加密貨幣與礦企", "proxy": "IBIT", "price": 29.18, "rvol": 1.57, "signal": "🚀 52W創高", "gate": "廣度起義(75%)"}, {"symbol": "TLN", "sector": "核能與次世代電力", "proxy": "NLR", "price": 436.29, "rvol": 2.27, "signal": "🚀 52W創高", "gate": "廣度起義(75%)"}]}
