@@ -1,5 +1,13 @@
 {
-  "update_time": "2026-06-22 03:10:26",
-  "count": 0,
-  "data": []
+  "update_time": "2026-06-21 19:40:55",
+  "count": 1,
+  "data": [
+    {
+      "symbol": "ARM",
+      "sector": "AI半導體",
+      "price": 439.46,
+      "rvol": 2.42,
+      "time": "2026-06-21 19:40"
+    }
+  ]
 }
