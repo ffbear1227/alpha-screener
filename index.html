@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Stock Screener</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/ios-filled/100/40C057/bullish.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-neutral-950 text-slate-100 font-sans select-none pb-12">
+
+    <header class="pt-12 pb-4 px-6 border-b border-neutral-800 flex justify-between items-center sticky top-0 bg-neutral-950/80 backdrop-blur-md">
+        <div>
+            <h1 class="text-xl font-black tracking-wider text-emerald-400">ALPHA <span class="text-white font-light">SCREEN</span></h1>
+            <p id="update-time" class="text-xs text-neutral-500 mt-0.5">最後更新: 讀取中...</p>
+        </div>
+        <button onclick="fetchData()" class="bg-neutral-900 border border-neutral-700 px-3 py-1.5 rounded-full text-xs font-semibold active:scale-95 transition">
+            重新整理
+        </button>
+    </header>
+
+    <main id="stock-list" class="p-6 space-y-4">
+        <div class="animate-pulse flex space-x-4 p-4 rounded-2xl bg-neutral-900">
+            <div class="flex-1 space-y-2 py-1">
+                <div class="h-4 bg-neutral-800 rounded w-3/4"></div>
+                <div class="h-4 bg-neutral-800 rounded w-1/2"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ★★★ 部署後，把這裡換成你 GitHub Pages 的 results.json 網址 ★★★
+        const JSON_URL = './results.json';
+
+        async function fetchData() {
+            const list = document.getElementById('stock-list');
+            try {
+                const res = await fetch(JSON_URL + '?t=' + new Date().getTime());
+                const data = await res.json();
+
+                document.getElementById('update-time').innerText = `最後更新: ${data.update_time}`;
+                list.innerHTML = '';
+
+                if(data.count === 0) {
+                    list.innerHTML = `<div class="text-center py-16 text-neutral-600 font-medium">本次時段無符合突破條件之標的</div>`;
+                    return;
+                }
+
+                data.data.forEach(item => {
+                    list.innerHTML += `
+                        <div class="p-5 rounded-2xl bg-gradient-to-br from-neutral-900 to-neutral-900/40 border border-neutral-800/80 flex items-center justify-between shadow-lg">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col items-center justify-center">
+                                    <span class="text-xs font-bold text-emerald-400">${item.sector}</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-xl font-black tracking-tight">${item.symbol}</h2>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400/10 text-amber-400 border border-amber-400/20">
+                                        RVOL ${item.rvol}x
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-mono font-bold">$${item.price}</div>
+                                <div class="text-[10px] text-emerald-400 font-medium mt-1">▲ 52W High</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) {
+                list.innerHTML = `<div class="text-red-400 text-center py-8">讀取資料失敗</div>`;
+            }
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
