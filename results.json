@@ -1,1 +1,1 @@
-{"update_time": "2026-07-06 18:26:52", "count": 0, "blocked_count": 3, "blocked_sectors": ["半導體與設備(SMH)", "核能與次世代電力(NLR)", "貴金屬與礦業(GLD)"], "data": []}
+{"update_time": "2026-07-06 20:50:42", "count": 1, "blocked_count": 3, "blocked_sectors": ["半導體與設備(SMH)", "核能與次世代電力(NLR)", "貴金屬與礦業(GLD)"], "data": [{"symbol": "TENB", "sector": "網路安全 (Sec)", "proxy": "CIBR", "price": 41.29, "rvol": 1.69, "signal": "🚀 52W創高", "gate": "ETF門神"}]}
