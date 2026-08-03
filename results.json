@@ -1,1 +1,1 @@
-{"update_time": "2026-08-03 18:17:30", "count": 0, "blocked_count": 3, "blocked_sectors": ["半導體與設備(SMH)", "高動能電動車(IDRV)", "前沿生技與減重(XBI)"], "data": []}
+{"update_time": "2026-08-03 20:25:01", "count": 2, "blocked_count": 3, "blocked_sectors": ["半導體與設備(SMH)", "高動能電動車(IDRV)", "前沿生技與減重(XBI)"], "data": [{"symbol": "AMZN", "sector": "美股七雄 (Mag7)", "proxy": "QQQ", "price": 284.02, "rvol": 1.8, "signal": "🚀 52W創高", "gate": "ETF門神"}, {"symbol": "AMZN", "sector": "全球數位電商", "proxy": "XLY", "price": 284.02, "rvol": 1.8, "signal": "🚀 52W創高", "gate": "ETF門神"}]}
