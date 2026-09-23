@@ -1,1 +1,1 @@
-{"update_time": "2026-09-23 19:46:00", "count": 0, "blocked_count": 8, "blocked_sectors": ["太空與國防(ITA)", "核能與次世代電力(NLR)", "高動能電動車(IDRV)", "前沿生技與減重(XBI)", "數位金融與支付(FINX)", "貴金屬與礦業(GLD)", "全球數位電商(XLY)", "中概網路龍頭(KWEB)"], "data": []}
+{"update_time": "2026-09-23 21:59:53", "count": 1, "blocked_count": 7, "blocked_sectors": ["太空與國防(ITA)", "核能與次世代電力(NLR)", "高動能電動車(IDRV)", "數位金融與支付(FINX)", "貴金屬與礦業(GLD)", "全球數位電商(XLY)", "中概網路龍頭(KWEB)"], "data": [{"symbol": "VKTX", "sector": "前沿生技與減重", "proxy": "XBI", "price": 41.65, "rvol": 3.14, "signal": "⚡ 底部發動", "gate": "廣度起義(57%)"}]}
